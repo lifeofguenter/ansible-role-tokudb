@@ -73,22 +73,8 @@
   copy: src=tokudbify.sh dest=/usr/local/bin/tokudbify mode="a+x"
   become: yes
 
-- name: Apply my.cnf changes
-  lineinfile: dest=/etc/mysql/my.cnf regexp="^#?{{ item.name }}" line="{{ item.name }} = {{ item.value }}" insertafter="[mysqld]"
-  with_items:
-    - { name: 'max_connections', value: '256' }
-    - { name: 'table_open_cache', value: '2048' }
-    - { name: 'log_warnings', value: '2' }
-    - { name: 'slow_query_log', value: '1' }
-    - { name: 'log_output', value: 'FILE' }
-    - { name: 'slow_query_log_file', value: '/var/log/mysql/mysql-slow.log' }
-    - { name: 'long_query_time', value: '4' }
-    - { name: 'bind-address', value: '0.0.0.0' }
-  notify: restart_tokudb
-  become: yes
-
-- name: Skip Name Resolving
-  lineinfile: dest=/etc/mysql/my.cnf line="skip-name-resolve" insertafter="[mysqld]"
+- name: Add custom.cnf
+  copy: src=custom.cnf dest=/etc/mysql/conf.d/custom.cnf mode=0644
   notify: restart_tokudb
   become: yes
 
@@ -97,41 +83,8 @@
   notify: restart_tokudb
   become: yes
 
-# https://dev.mysql.com/doc/refman/5.6/en/innodb-turning-off.html
-# http://stackoverflow.com/questions/11772611/how-to-disable-innodb-in-mysql
 - name: Disable innodb
-  lineinfile: dest=/etc/mysql/my.cnf regexp="^#?{{ item.name }}" line="{{ item.name }} = {{ item.value }}" insertafter="[mysqld]"
-  with_items:
-    - { name: 'innodb', value: 'OFF' }
-    - { name: 'loose-innodb-trx', value: '0' }
-    - { name: 'loose-innodb-locks', value: '0' }
-    - { name: 'loose-innodb-lock-waits', value: '0' }
-    - { name: 'loose-innodb-cmp', value: '0' }
-    - { name: 'loose-innodb-cmp-per-index', value: '0' }
-    - { name: 'loose-innodb-cmp-per-index-reset', value: '0' }
-    - { name: 'loose-innodb-cmp-reset', value: '0' }
-    - { name: 'loose-innodb-cmpmem', value: '0' }
-    - { name: 'loose-innodb-cmpmem-reset', value: '0' }
-    - { name: 'loose-innodb-buffer-page', value: '0' }
-    - { name: 'loose-innodb-buffer-page-lru', value: '0' }
-    - { name: 'loose-innodb-buffer-pool-stats', value: '0' }
-    - { name: 'loose-innodb-metrics', value: '0' }
-    - { name: 'loose-innodb-ft-default-stopword', value: '0' }
-    - { name: 'loose-innodb-ft-inserted', value: '0' }
-    - { name: 'loose-innodb-ft-deleted', value: '0' }
-    - { name: 'loose-innodb-ft-being-deleted', value: '0' }
-    - { name: 'loose-innodb-ft-config', value: '0' }
-    - { name: 'loose-innodb-ft-index-cache', value: '0' }
-    - { name: 'loose-innodb-ft-index-table', value: '0' }
-    - { name: 'loose-innodb-sys-tables', value: '0' }
-    - { name: 'loose-innodb-sys-tablestats', value: '0' }
-    - { name: 'loose-innodb-sys-indexes', value: '0' }
-    - { name: 'loose-innodb-sys-columns', value: '0' }
-    - { name: 'loose-innodb-sys-fields', value: '0' }
-    - { name: 'loose-innodb-sys-foreign', value: '0' }
-    - { name: 'loose-innodb-sys-foreign-cols', value: '0' }
-    - { name: 'default-storage-engine', value: 'TokuDB' }
-    - { name: 'default_tmp_storage_engine', value: 'TokuDB' }
+  copy: src=disable_innodb.cnf dest=/etc/mysql/conf.d/disable_innodb.cnf mode=0644
   notify: restart_tokudb
   become: yes
 

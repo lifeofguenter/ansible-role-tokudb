@@ -1,0 +1,27 @@
+# https://dev.mysql.com/doc/refman/5.6/en/innodb-turning-off.html
+# http://stackoverflow.com/questions/11772611/how-to-disable-innodb-in-mysql
+[mysqld]
+innodb=OFF
+loose-innodb-trx=0
+loose-innodb-locks-unsafe-for-binlog=0
+loose-innodb-lock-waits=0
+loose-innodb-cmp-per-index-enabled=0
+loose-innodb-cmp-per-index-reset=0
+loose-innodb-cmp-reset=0
+loose-innodb-cmpmem-reset=0
+loose-innodb-buffer-page-lru=0
+loose-innodb-buffer-pool-stats=0
+loose-innodb-metrics=0
+loose-innodb-ft-default-stopword=0
+loose-innodb-ft-deleted=0
+loose-innodb-ft-being-deleted=0
+loose-innodb-ft-config=0
+loose-innodb-ft-index-cache=0
+loose-innodb-ft-index-table=0
+loose-innodb-sys-tablestats=0
+loose-innodb-sys-indexes=0
+loose-innodb-sys-columns=0
+loose-innodb-sys-fields=0
+loose-innodb-sys-foreign-cols=0
+default-storage-engine=TokuDB
+default_tmp_storage_engine=TokuDB
