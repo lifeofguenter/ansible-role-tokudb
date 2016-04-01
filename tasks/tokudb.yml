@@ -1,0 +1,147 @@
+---
+
+- name: Prerequisites
+  apt: name=python-mysqldb cache_valid_time=3600 state=present
+  become: yes
+
+- name: Add apt-key
+  apt_key: keyserver=keyserver.ubuntu.com id=0xcbcb082a1bb943db
+  become: yes
+
+- name: Add repository
+  apt_repository: repo='deb [arch=amd64,i386] http://lon1.mirrors.digitalocean.com/mariadb/repo/10.1/debian jessie main' state=present
+  become: yes
+
+- name: Add repository (src)
+  apt_repository: repo='deb-src http://lon1.mirrors.digitalocean.com/mariadb/repo/10.1/debian jessie main' state=present
+  become: yes
+
+- name: Install MariaDB
+  apt: name="{{ item }}" state=present
+  with_items:
+    - mariadb-server
+    - libmariadbclient-dev
+  become: yes
+
+- name: Create admin user
+  mysql_user: name="{{ mysql_user }}" password="{{ mysql_password }}" host="%" priv="*.*:ALL,GRANT" login_user=root state=present
+
+- name: Create local my.cnf
+  template: src=my.cnf dest=~/.my.cnf mode=0600
+
+- name: Delete insecure users
+  mysql_user: name=root host="{{ item }}" state=absent
+  with_items:
+    - "{{ansible_hostname}}"
+    - 127.0.0.1
+    - ::1
+    - localhost
+
+- name: Set default charsets to utf8mb4
+  lineinfile: dest=/etc/mysql/conf.d/mariadb.cnf regexp="^#?{{ item }}" line="{{ item }} = utf8mb4"
+  with_items:
+  - default-character-set
+  - character-set-server
+  - character_set_server
+  notify: restart_tokudb
+  become: yes
+
+- name: Set default collates to utf8mb4_unicode_ci
+  lineinfile: dest=/etc/mysql/conf.d/mariadb.cnf regexp="^#?{{ item }}" line="{{ item }} = utf8mb4_unicode_ci"
+  with_items:
+  - collation-server
+  - collation_server
+  notify: restart_tokudb
+  become: yes
+
+- name: Enable TokuDB
+  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?plugin-load-add" line="plugin-load-add=ha_tokudb.so"
+  notify: restart_tokudb
+  become: yes
+
+- name: Set DirectIO (TokuDB)
+  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?tokudb_directio" line="tokudb_directio=1"
+  notify: restart_tokudb
+  become: yes
+
+- name: Set Compression (TokuDB)
+  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?tokudb_row_format" line="tokudb_row_format=tokudb_lzma"
+  notify: restart_tokudb
+  become: yes
+
+- name: Add tokudbify script
+  copy: src=tokudbify.sh dest=/usr/local/bin/tokudbify mode="a+x"
+  become: yes
+
+- name: Apply my.cnf changes
+  lineinfile: dest=/etc/mysql/my.cnf regexp="^#?{{ item.name }}" line="{{ item.name }} = {{ item.value }}" insertafter="[mysqld]"
+  with_items:
+    - { name: 'max_connections', value: '256' }
+    - { name: 'table_open_cache', value: '2048' }
+    - { name: 'log_warnings', value: '2' }
+    - { name: 'slow_query_log', value: '1' }
+    - { name: 'log_output', value: 'FILE' }
+    - { name: 'slow_query_log_file', value: '/var/log/mysql/mysql-slow.log' }
+    - { name: 'long_query_time', value: '4' }
+    - { name: 'bind-address', value: '0.0.0.0' }
+  notify: restart_tokudb
+  become: yes
+
+- name: Skip Name Resolving
+  lineinfile: dest=/etc/mysql/my.cnf line="skip-name-resolve" insertafter="[mysqld]"
+  notify: restart_tokudb
+  become: yes
+
+- name: Delete all innodb settings
+  lineinfile: dest=/etc/mysql/my.cnf state=absent regexp="^innodb_"
+  notify: restart_tokudb
+  become: yes
+
+# https://dev.mysql.com/doc/refman/5.6/en/innodb-turning-off.html
+# http://stackoverflow.com/questions/11772611/how-to-disable-innodb-in-mysql
+- name: Disable innodb
+  lineinfile: dest=/etc/mysql/my.cnf regexp="^#?{{ item.name }}" line="{{ item.name }} = {{ item.value }}" insertafter="[mysqld]"
+  with_items:
+    - { name: 'innodb', value: 'OFF' }
+    - { name: 'loose-innodb-trx', value: '0' }
+    - { name: 'loose-innodb-locks', value: '0' }
+    - { name: 'loose-innodb-lock-waits', value: '0' }
+    - { name: 'loose-innodb-cmp', value: '0' }
+    - { name: 'loose-innodb-cmp-per-index', value: '0' }
+    - { name: 'loose-innodb-cmp-per-index-reset', value: '0' }
+    - { name: 'loose-innodb-cmp-reset', value: '0' }
+    - { name: 'loose-innodb-cmpmem', value: '0' }
+    - { name: 'loose-innodb-cmpmem-reset', value: '0' }
+    - { name: 'loose-innodb-buffer-page', value: '0' }
+    - { name: 'loose-innodb-buffer-page-lru', value: '0' }
+    - { name: 'loose-innodb-buffer-pool-stats', value: '0' }
+    - { name: 'loose-innodb-metrics', value: '0' }
+    - { name: 'loose-innodb-ft-default-stopword', value: '0' }
+    - { name: 'loose-innodb-ft-inserted', value: '0' }
+    - { name: 'loose-innodb-ft-deleted', value: '0' }
+    - { name: 'loose-innodb-ft-being-deleted', value: '0' }
+    - { name: 'loose-innodb-ft-config', value: '0' }
+    - { name: 'loose-innodb-ft-index-cache', value: '0' }
+    - { name: 'loose-innodb-ft-index-table', value: '0' }
+    - { name: 'loose-innodb-sys-tables', value: '0' }
+    - { name: 'loose-innodb-sys-tablestats', value: '0' }
+    - { name: 'loose-innodb-sys-indexes', value: '0' }
+    - { name: 'loose-innodb-sys-columns', value: '0' }
+    - { name: 'loose-innodb-sys-fields', value: '0' }
+    - { name: 'loose-innodb-sys-foreign', value: '0' }
+    - { name: 'loose-innodb-sys-foreign-cols', value: '0' }
+    - { name: 'default-storage-engine', value: 'TokuDB' }
+    - { name: 'default_tmp_storage_engine', value: 'TokuDB' }
+  notify: restart_tokudb
+  become: yes
+
+- name: Delete InnoDB specific tables
+  command: "mysql mysql -e 'DROP TABLE {{ item }};'"
+  with_items:
+    - innodb_index_stats
+    - innodb_table_stats
+
+- name: Modify InnoDB tables to MyISAM
+  command: "mysql mysql -e 'ALTER TABLE {{ item }} ENGINE=MyISAM;'"
+  with_items:
+    - gtid_slave_pos
