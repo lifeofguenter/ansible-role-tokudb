@@ -12,7 +12,7 @@ addons:
     - python-pip
 
 before_install:
-  - apt-get remove --purge mysql-server*
+  - sudo apt-get -yq remove --purge mysql-server* mysql-client*
 
 install:
   # Install ansible
