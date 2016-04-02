@@ -23,6 +23,8 @@
     - libmariadbclient-dev
   become: yes
 
+# todo: create .my.cnf if it does not exist (e.g. assume first installation?) with user=root and empty password
+
 - name: Create admin user
   mysql_user: name="{{ mysql_user }}" password="{{ mysql_password }}" host="%" priv="*.*:ALL,GRANT" login_user=root state=present
 
