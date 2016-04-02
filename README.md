@@ -12,7 +12,7 @@ _None._
 ## Role Variables
 
 ```
-mysql_username: admin
+mysql_user: admin
 ```
 
 ```

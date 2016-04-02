@@ -3,6 +3,7 @@
   apt: name={{ item }} state=present update_cache=yes cache_valid_time=3600
   with_items:
     - libdbd-mysql-perl
+    - libcache-cache-perl
   become: yes
 
 - name: Add mysql_commands plugin
