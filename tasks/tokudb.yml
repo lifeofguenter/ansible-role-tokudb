@@ -9,11 +9,11 @@
   become: yes
 
 - name: Add repository
-  apt_repository: repo='deb [arch=amd64,i386] http://lon1.mirrors.digitalocean.com/mariadb/repo/10.1/debian jessie main' state=present
+  apt_repository: repo="deb [arch=amd64,i386] http://lon1.mirrors.digitalocean.com/mariadb/repo/10.1/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main" state=present
   become: yes
 
 - name: Add repository (src)
-  apt_repository: repo='deb-src http://lon1.mirrors.digitalocean.com/mariadb/repo/10.1/debian jessie main' state=present
+  apt_repository: repo="deb-src http://lon1.mirrors.digitalocean.com/mariadb/repo/10.1/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} main" state=present
   become: yes
 
 - name: Install MariaDB
@@ -38,7 +38,7 @@
 - name: Delete insecure users
   mysql_user: name=root host="{{ item }}" state=absent
   with_items:
-    - "{{ trim(current_hostname.stdout) }}"
+    - "{{ current_hostname.stdout | trim }}"
     - "{{ ansible_hostname }}"
     - 127.0.0.1
     - ::1
