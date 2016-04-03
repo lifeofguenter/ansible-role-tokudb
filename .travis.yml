@@ -14,6 +14,8 @@ before_install:
   - "sudo apt-get remove --purge mysql-common mysql-server-5.5 mysql-server-core-5.5 mysql-client-5.5 mysql-client-core-5.5"
   - "sudo apt-get autoremove --purge"
   - "sudo rm -rf /var/lib/mysql"
+  - "echo never | sudo tee /sys/kernel/mm/transparent_hugepage/enabled"
+  - "echo never | sudo tee /sys/kernel/mm/transparent_hugepage/defrag"
 
 install:
   # Install ansible
@@ -28,8 +30,8 @@ install:
 script:
   - "ansible-playbook tests/test.yml -i tests/inventory --connection=local"
 
-after_script:
-  - "sudo tail -n 1000 /var/log/syslog"
+#after_script:
+#  - "sudo tail -n 1000 /var/log/syslog"
 
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/
