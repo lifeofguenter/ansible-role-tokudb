@@ -1,9 +1,7 @@
 ---
 language: python
 python: "2.7"
-
-# Use the new container infrastructure
-sudo: true
+sudo: required
 
 # Install ansible
 addons:
@@ -12,7 +10,9 @@ addons:
     - python-pip
 
 before_install:
-  - sudo apt-get -yq remove --purge mysql-server* mysql-client*
+  # remove mysql
+  - "sudo apt-get remove --purge mysql-common mysql-server-5.5 mysql-server-core-5.5 mysql-client-5.5 mysql-client-core-5.5"
+  - "sudo apt-get autoremove --purge"
 
 install:
   # Install ansible
@@ -22,7 +22,7 @@ install:
   - ansible --version
 
   # Create ansible.cfg with correct roles_path
-  - printf '[defaults]\nroles_path=../' >ansible.cfg
+  - printf '[defaults]\nroles_path=../' > ansible.cfg
 
 script:
   - "ansible-playbook tests/test.yml -i tests/inventory --connection=local"
