@@ -28,5 +28,8 @@ install:
 script:
   - "ansible-playbook tests/test.yml -i tests/inventory --connection=local"
 
+after_script:
+  - "sudo tail -n 1000 /var/log/syslog"
+
 notifications:
   webhooks: https://galaxy.ansible.com/api/v1/notifications/
