@@ -1,2 +1,7 @@
 ---
-# defaults file for tokudb
+
+mysql_bind_address: 0.0.0.0
+
+mysql_max_connections: 256
+
+mysql_charset: utf8mb4

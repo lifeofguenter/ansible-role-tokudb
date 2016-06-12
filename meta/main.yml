@@ -10,6 +10,7 @@ galaxy_info:
     - precise
     - trusty
     - wily
+    - xenial
   - name: Debian
     versions:
     - wheezy

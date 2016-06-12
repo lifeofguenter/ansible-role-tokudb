@@ -29,7 +29,7 @@
   mysql_user: name="{{ mysql_user }}" password="{{ mysql_password }}" host="%" priv="*.*:ALL,GRANT" login_user=root state=present
 
 - name: Create local my.cnf
-  template: src=my.cnf dest=~/.my.cnf mode=0600
+  template: src=my.cnf.j2 dest=~/.my.cnf mode=0600
 
 - name: Get current hostname
   command: hostname
@@ -45,7 +45,7 @@
     - localhost
 
 - name: Set default charsets to utf8mb4
-  lineinfile: dest=/etc/mysql/conf.d/mariadb.cnf regexp="^#?{{ item }}" line="{{ item }} = utf8mb4"
+  lineinfile: dest=/etc/mysql/conf.d/mariadb.cnf regexp="^#?{{ item }}" line="{{ item }} = {{ mysql_charset }}"
   with_items:
   - default-character-set
   - character-set-server
@@ -54,7 +54,7 @@
   become: yes
 
 - name: Set default collates to utf8mb4_unicode_ci
-  lineinfile: dest=/etc/mysql/conf.d/mariadb.cnf regexp="^#?{{ item }}" line="{{ item }} = utf8mb4_unicode_ci"
+  lineinfile: dest=/etc/mysql/conf.d/mariadb.cnf regexp="^#?{{ item }}" line="{{ item }} = {{ mysql_charset }}_unicode_ci"
   with_items:
   - collation-server
   - collation_server
@@ -76,12 +76,12 @@
   notify: restart_tokudb
   become: yes
 
-- name: Add tokudbify script
-  copy: src=tokudbify.sh dest=/usr/local/bin/tokudbify mode="a+x"
+- name: Add tokudbfy script
+  copy: src=tokudbfy.sh dest=/usr/local/bin/tokudbfy mode="a+x"
   become: yes
 
 - name: Add custom.cnf
-  copy: src=custom.cnf dest=/etc/mysql/conf.d/custom.cnf mode=0644
+  template: src=custom.cnf.j2 dest=/etc/mysql/conf.d/custom.cnf mode=0644
   notify: restart_tokudb
   become: yes
 

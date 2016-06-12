@@ -1,10 +1,10 @@
 [mysqld]
 skip-name-resolve
-max_connections = 256
+max_connections = {{ mysql_max_connections }}
 table_open_cache = 2048
 log_warnings = 2
 slow_query_log = 1
 log_output = FILE
 slow_query_log_file = /var/log/mysql/mysql-slow.log
 long_query_time = 4
-bind-address = 0.0.0.0
+bind-address = {{ mysql_bind_address }}
