@@ -75,6 +75,11 @@
   lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?tokudb_row_format" line="tokudb_row_format=tokudb_lzma"
   notify: restart_tokudb
   become: yes
+  
+- name: Set Cache Size (TokuDB)
+  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?tokudb_cache_size" line="tokudb_cache_size={{ mysql_tokudb_cache_size }}"
+  notify: restart_tokudb
+  become: yes
 
 - name: Add tokudbfy script
   copy: src=tokudbfy.sh dest=/usr/local/bin/tokudbfy mode="a+x"
