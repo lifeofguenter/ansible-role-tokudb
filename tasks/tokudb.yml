@@ -23,13 +23,34 @@
     - libmariadbclient-dev
   become: yes
 
-# todo: create .my.cnf if it does not exist (e.g. assume first installation?) with user=root and empty password
+- name: check for existing my.cnf
+  stat:
+    path: ~/.my.cnf
+  register: mycnf
 
-- name: Create admin user
-  mysql_user: name="{{ mysql_user }}" password="{{ mysql_password }}" host="%" priv="*.*:ALL,GRANT" state=present
+- name: add initial my.cnf
+  copy:
+    content: |
+      [client]
+      user=root
+      password=
+    dest: ~/.my.cnf
+    mode: 0600
+  when: mycnf.stat.exists == False
 
-- name: Create local my.cnf
-  template: src=my.cnf.j2 dest=~/.my.cnf mode=0600
+- name: create admin user
+  mysql_user:
+    name: "{{ mysql_user }}"
+    password: "{{ mysql_password }}"
+    host: "%"
+    priv: "*.*:ALL,GRANT"
+    state: present
+
+- name: create local my.cnf
+  template:
+    src: my.cnf.j2
+    dest: ~/.my.cnf
+    mode: 0600
 
 - name: Get current hostname
   command: hostname
@@ -61,23 +82,11 @@
   notify: restart_tokudb
   become: yes
 
-- name: Enable TokuDB
-  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?plugin-load-add" line="plugin-load-add=ha_tokudb.so"
-  notify: restart_tokudb
-  become: yes
-
-- name: Set DirectIO (TokuDB)
-  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?tokudb_directio" line="tokudb_directio=1"
-  notify: restart_tokudb
-  become: yes
-
-- name: Set Compression (TokuDB)
-  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?tokudb_row_format" line="tokudb_row_format=tokudb_lzma"
-  notify: restart_tokudb
-  become: yes
-  
-- name: Set Cache Size (TokuDB)
-  lineinfile: dest=/etc/mysql/conf.d/tokudb.cnf regexp="^#?tokudb_cache_size" line="tokudb_cache_size={{ mysql_tokudb_cache_size }}"
+- name: add tokudb.cnf
+  template:
+    src: tokudb.cnf.j2
+    dest: /etc/mysql/conf.d/tokudb.cnf
+    mode: 0644
   notify: restart_tokudb
   become: yes
 

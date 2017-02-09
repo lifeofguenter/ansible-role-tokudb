@@ -1,0 +1,12 @@
+[mariadb]
+# See https://mariadb.com/kb/en/how-to-enable-tokudb-in-mariadb/
+# for instructions how to enable TokuDB
+#
+# See https://mariadb.com/kb/en/tokudb-differences/ for differences
+# between TokuDB in MariaDB and TokuDB from http://www.tokutek.com/
+
+plugin-load-add=ha_tokudb.so
+
+tokudb_directio=1
+tokudb_row_format=tokudb_lzma
+tokudb_cache_size={{ mysql_tokudb_cache_size }}
