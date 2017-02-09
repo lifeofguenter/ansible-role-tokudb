@@ -26,7 +26,7 @@
 # todo: create .my.cnf if it does not exist (e.g. assume first installation?) with user=root and empty password
 
 - name: Create admin user
-  mysql_user: name="{{ mysql_user }}" password="{{ mysql_password }}" host="%" priv="*.*:ALL,GRANT" login_user=root state=present
+  mysql_user: name="{{ mysql_user }}" password="{{ mysql_password }}" host="%" priv="*.*:ALL,GRANT" state=present
 
 - name: Create local my.cnf
   template: src=my.cnf.j2 dest=~/.my.cnf mode=0600
@@ -101,7 +101,7 @@
   become: yes
 
 - name: Delete InnoDB specific tables
-  command: "mysql mysql -e 'DROP TABLE {{ item }};'"
+  command: "mysql mysql -e 'DROP TABLE IF EXISTS {{ item }};'"
   with_items:
     - innodb_index_stats
     - innodb_table_stats
